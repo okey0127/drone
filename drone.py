@@ -4,7 +4,7 @@ import os
 from flask import Flask, render_template, make_response
 import matplotlib.pyplot as plt
 import math
-
+#import pytesseract
 
 ### 1. 캠을 통한 영상 송출 및 캡쳐 except web streaming
 cap = cv2.VideoCapture(0)
@@ -89,8 +89,13 @@ while True:
                 d['idx'] = cnt
                 cnt += 1
                 possible_contours.append(d)
-                
-                       
+        
+        for d in possible_contours:
+            img = cv2.rectangle(img, (d['x'], d['y']), (d['x']+d['w'], d['y']+d['h']), (255, 0, 0), 3)
+        
+        plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        plt.show()
+        
         #사각형 중심이 이미지의 중앙에 가장 가까운 것을 '숫자' 로 인식한다.
         diff = 1000
         for d in possible_contours:
@@ -101,10 +106,16 @@ while True:
         
         
         num_img = thresh[n_contour['y']-10:n_contour['y']+n_contour['h']+10,n_contour['x']-10:n_contour['x']+n_contour['w']+10]
-        cv2.imwrite(now_dir+'/number.jpg', num_img)
-        plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
-        plt.show()
         
+        #Adaptive Thresholding // 한번 더 이 작업을 수행하여 숫자의 형태를 분명하게 해준다.
+        num_img_blurred = cv2.GaussianBlur(num_img, ksize=(5,5), sigmaX=0) #노이즈 블러
+        num_thresh = cv2.adaptiveThreshold(num_img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
+        
+        cv2.imwrite(now_dir+'/number.jpg', num_img)
+        #plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
+        #plt.show()
+        
+        #KNN 머신러닝데이터로 대조하여 결과 출력
         FILE_NAME = now_dir + '/number/trained.npz'
         train, train_labels = load_train_data(FILE_NAME)
         

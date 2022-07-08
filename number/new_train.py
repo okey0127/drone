@@ -5,13 +5,14 @@ import glob
 # 테스트를 통해 수집된 숫자 이미지로 추가 데이터에 대한 학습을 진행합니다.
 
 now_dir = os.path.dirname(os.path.abspath(__file__))
-'''
+
+
 # 머신러닝 된 데이터가 몇개인지 확인하는 코드
 pre_data = np.load(now_dir + "/trained.npz")
 p_train = np.array(pre_data['train'])
 p_train_labels = np.array(pre_data['train_labels'])
 print(p_train.shape)
-''' 
+
 
 # 어떤 숫자에 대한 데이터를 학습시킬 것인지 지정
 for number in range(10):
