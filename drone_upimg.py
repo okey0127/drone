@@ -91,9 +91,13 @@ while True:
             diff = d_diff
             n_contour = d
     try:   
-        frame = cv2.rectangle(frame, (n_contour['x'], n_contour['y']), (n_contour['x']+n_contour['w'], n_contour['y']+n_contour['h']), (255, 0, 0), 3)
+        clearance_x = int(n_contour['w']*0.3)
+        clearance_y = int(n_contour['h']*0.3)
+        
+        frame = cv2.rectangle(frame, (n_contour['x']-clearance_x, n_contour['y']-clearance_y), (n_contour['x']+n_contour['w']+clearance_x, n_contour['y']+n_contour['h']+clearance_y), (255, 0, 0), 3)
         cv2.imshow('test', frame)
     except:
+        
         cv2.imshow('test', frame)
         
     key_input = cv2.waitKey(1)
@@ -101,12 +105,12 @@ while True:
         break
     elif key_input == ord('a'):
         try:
-            num_img = thresh[n_contour['y']-10:n_contour['y']+n_contour['h']+10,n_contour['x']-10:n_contour['x']+n_contour['w']+10]
+            num_img = thresh[n_contour['y']-clearance_y:n_contour['y']+n_contour['h']+clearance_y,n_contour['x']-clearance_x:n_contour['x']+n_contour['w']+clearance_x]
             #Adaptive Thresholding // 한번 더 이 작업을 수행하여 숫자의 형태를 분명하게 해준다.
             num_img_blurred = cv2.GaussianBlur(num_img, ksize=(5,5), sigmaX=0) #노이즈 블러
             num_thresh = cv2.adaptiveThreshold(num_img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
         
-            cv2.imwrite(now_dir+'/number.jpg', num_img)
+            cv2.imwrite(now_dir+'/number.jpg', num_thresh)
             #plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
             #plt.show()
             
