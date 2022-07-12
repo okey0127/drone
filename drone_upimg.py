@@ -4,8 +4,10 @@ import os
 from flask import Flask, render_template, make_response
 import matplotlib.pyplot as plt
 import math
-#import pytesseract
+import pytesseract
+from PIL import Image
 ####학습 데이터 수집을 위한 코드#### 
+pytesseract.pytesseract.tesseract_cmd=R'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 ### 1. 캠을 통한 영상 송출 및 캡쳐 except web streaming
 cap = cv2.VideoCapture(0)
@@ -121,10 +123,16 @@ while True:
             #KNN 머신러닝데이터로 대조하여 결과 출력
             FILE_NAME = now_dir + '/number/up_trained.npz'
             train, train_labels = load_train_data(FILE_NAME)
-        
+            #KNN
             test = resize120(num_img)
             result = check(test, train, train_labels)
             print(int(result))
+            '''
+            #tesseract
+            image = Image.open(now_dir+'/number.jpg')
+            dd = pytesseract.image_to_string(image, lang=None)
+            print(dd)
+            '''
         except:
             
             print('no number')

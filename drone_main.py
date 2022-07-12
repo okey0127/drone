@@ -154,8 +154,7 @@ def captureFrames():
             except:
                 detect_result = 'no image'
                 number_detect = 'N'
-                
-                
+                            
     cap.release()
 
  
