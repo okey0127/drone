@@ -5,6 +5,7 @@ from flask import Flask, render_template, make_response
 import matplotlib.pyplot as plt
 import math
 #import pytesseract
+####학습 데이터 수집을 위한 코드#### 
 
 ### 1. 캠을 통한 영상 송출 및 캡쳐 except web streaming
 cap = cv2.VideoCapture(0)
@@ -91,10 +92,10 @@ while True:
             diff = d_diff
             n_contour = d
     try:   
-        clearance_x = int(n_contour['w']*0.3)
+        clearance_x = int(n_contour['h']*0.3)
         clearance_y = int(n_contour['h']*0.3)
         
-        frame = cv2.rectangle(frame, (n_contour['x']-clearance_x, n_contour['y']-clearance_y), (n_contour['x']+n_contour['w']+clearance_x, n_contour['y']+n_contour['h']+clearance_y), (255, 0, 0), 3)
+        frame = cv2.rectangle(frame, (n_contour['x'], n_contour['y']), (n_contour['x']+n_contour['w'], n_contour['y']+n_contour['h']), (255, 0, 0), 3)
         cv2.imshow('test', frame)
     except:
         
@@ -105,7 +106,10 @@ while True:
         break
     elif key_input == ord('a'):
         try:
-            num_img = thresh[n_contour['y']-clearance_y:n_contour['y']+n_contour['h']+clearance_y,n_contour['x']-clearance_x:n_contour['x']+n_contour['w']+clearance_x]
+            #이미지 크롭
+            num_img = thresh[n_contour['y']:n_contour['y']+n_contour['h'],n_contour['x']:n_contour['x']+n_contour['w']]
+            #이미지에 여백을 준다
+            num_img= cv2.copyMakeBorder(num_img, top=clearance_y, bottom=clearance_y, left=clearance_x, right=clearance_x, borderType=cv2.BORDER_CONSTANT, value=(0,0,0))
             #Adaptive Thresholding // 한번 더 이 작업을 수행하여 숫자의 형태를 분명하게 해준다.
             num_img_blurred = cv2.GaussianBlur(num_img, ksize=(5,5), sigmaX=0) #노이즈 블러
             num_thresh = cv2.adaptiveThreshold(num_img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
@@ -122,6 +126,7 @@ while True:
             result = check(test, train, train_labels)
             print(int(result))
         except:
+            
             print('no number')
 
 cap.release()
