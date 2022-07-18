@@ -67,4 +67,4 @@ for number in range(10):
     for file in glob.glob(data_path + '/*'):
         os.remove(file)
     print(f'{number} 데이터 삭제 완료')
-    
+
