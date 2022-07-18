@@ -86,9 +86,11 @@ while True:
     img_gray = cv2.cvtColor(img_result, cv2.COLOR_BGR2GRAY)
     
     # 블러 처리를 통한 노이즈 제거
-    img_blurred = cv2.GaussianBlur(img_gray, ksize=(21,21), sigmaX=0) 
-    # Adaptive Thresholding
-    thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
+    img_blurred = cv2.GaussianBlur(img_gray, ksize=(5,5), sigmaX=0) 
+    cv2.imshow('blurr', img_blurred)
+    # e Thresholding
+    ret, thresh = cv2.threshold(img_blurred, 254, 255, cv2.THRESH_BINARY_INV)
+    #thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
     cv2.imshow('th', thresh)
     
     contours = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -128,6 +130,7 @@ while True:
         break
     elif key_input == ord('a'):
         try:
+            result = []
             for contour in possible_contours:
                 #이미지 크롭
                 num_img = thresh[contour['y']:contour['y']+contour['h'],contour['x']:contour['x']+contour['w']]
@@ -138,8 +141,9 @@ while True:
                 num_img= cv2.copyMakeBorder(num_img, top=clearance_y, bottom=clearance_y, left=clearance_x, right=clearance_x, borderType=cv2.BORDER_CONSTANT, value=(0,0,0))
                 
                 #Adaptive Thresholding // 한번 더 이 작업을 수행하여 숫자의 형태를 분명하게 해준다.
-                num_img_blurred = cv2.GaussianBlur(num_img, ksize=(21,21), sigmaX=0) #노이즈 블러
-                num_thresh = cv2.adaptiveThreshold(num_img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
+                num_img_blurred = cv2.GaussianBlur(num_img, ksize=(5,5), sigmaX=0) #노이즈 블러
+                ret, num_thresh = cv2.threshold(num_img_blurred, 254, 255, cv2.THRESH_BINARY)
+                #num_thresh = cv2.adaptiveThreshold(num_img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
 
                 cv2.imwrite(now_dir+'/number.jpg', num_thresh)
                 #plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
@@ -150,14 +154,15 @@ while True:
                 train, train_labels = load_train_data(FILE_NAME)
                 #KNN
                 test = resize120(num_img)
-                result = check(test, train, train_labels)
-                print(int(result))
+                result.append(int(check(test, train, train_labels)))
+                
                 '''
                 #tesseract
                 image = Image.open(now_dir+'/number.jpg')
                 dd = pytesseract.image_to_string(image, lang=None)
                 print(dd)
                 '''
+            print(result)
         except:
             print('no number')
     '''
