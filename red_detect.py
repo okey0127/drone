@@ -86,10 +86,10 @@ while True:
     img_gray = cv2.cvtColor(img_result, cv2.COLOR_BGR2GRAY)
     
     # 블러 처리를 통한 노이즈 제거
-    img_blurred = cv2.GaussianBlur(img_gray, ksize=(5,5), sigmaX=0) 
+    img_blurred = cv2.GaussianBlur(img_gray, ksize=(15,15), sigmaX=0) 
     cv2.imshow('blurr', img_blurred)
     # e Thresholding
-    ret, thresh = cv2.threshold(img_blurred, 254, 255, cv2.THRESH_BINARY_INV)
+    ret, thresh = cv2.threshold(img_blurred, 200, 255, cv2.THRESH_BINARY_INV)
     #thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
     cv2.imshow('th', thresh)
     
@@ -142,7 +142,7 @@ while True:
                 
                 #Adaptive Thresholding // 한번 더 이 작업을 수행하여 숫자의 형태를 분명하게 해준다.
                 num_img_blurred = cv2.GaussianBlur(num_img, ksize=(5,5), sigmaX=0) #노이즈 블러
-                ret, num_thresh = cv2.threshold(num_img_blurred, 254, 255, cv2.THRESH_BINARY)
+                ret, num_thresh = cv2.threshold(num_img_blurred, 127, 255, cv2.THRESH_BINARY)
                 #num_thresh = cv2.adaptiveThreshold(num_img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
 
                 cv2.imwrite(now_dir+'/number.jpg', num_thresh)
