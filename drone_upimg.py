@@ -60,6 +60,7 @@ while True:
     #Adaptive Thresholding
     img_blurred = cv2.GaussianBlur(img_gray, ksize=(5,5), sigmaX=0) #노이즈 블러
     thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
+    cv2.imshow('th', thresh)
 
     contours = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
     temp_result = np.zeros((height, width, channel), dtype=np.uint8)
@@ -71,8 +72,8 @@ while True:
         temp_result = cv2.rectangle(temp_result, (x, y), (x+w, y+h), (0,0,255), 3)
         contours_dict.append({'contour':contour, 'x':x, 'y':y, 'w':w, 'h':h, 'cx': x+(w/2), 'cy': y+(h/2)})
     
-    Min_area = 80
-    Min_width, Min_height = 2, 8
+    Min_area = 500
+    Min_width, Min_height = 10, 40
     min_ratio, max_ratio = 0.1, 1
     
     possible_contours = []
