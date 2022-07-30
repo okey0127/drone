@@ -218,19 +218,7 @@ def main():
             
         return redirect('/')
     
-    return render_template('index.html', result = detect_result, ipaddr = in_ipaddr)
-
-@app.route('/ex', methods=['GET', 'POST'])
-def ex_main():
-    global number_detect
-    if request.method == 'POST':
-        a = request.form.get('detect')
-        if a == 'detect':
-            number_detect = 'Y'
-            
-        return redirect('/')
-    
-    return render_template('index.html', result = detect_result, ipaddr = ex_ipaddr)
+    return render_template('index.html', result = detect_result)
 
 @app.route('/result', methods=["GET", "POST"])
 def d_result():
