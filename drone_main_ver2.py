@@ -9,6 +9,10 @@ import json
 import requests
 import socket
 ### ver.2 red_detect version ###
+
+img_w = 640
+img_h = 480
+
 global detect_result
 detect_result = '-'
 
@@ -23,11 +27,21 @@ video_frame = None
 global thread_lock 
 thread_lock = threading.Lock()
 
-#ip 주소 수집(외부)
-URL = 'https://icanhazip.com'
-respons = requests.get(URL)
-ex_ip = respons.text.strip()
-ex_ip_video = 'http://'+ex_ip+':8080/video'
+#인터넷 접속 될때 까지 무한루프를 돌린다.
+i_flag = 'Y'
+while True:
+    try:
+        #ip 주소 수집(외부)
+        URL = 'https://icanhazip.com'
+        respons = requests.get(URL)
+        ex_ip = respons.text.strip()
+        ex_ip_video = 'http://'+ex_ip+':8080/video'
+        break
+    except:
+        # 경고문은 추후 LCD로 출력되도록
+        if i_flag == 'Y':
+            print('No internet')
+            i_flag = 'N'
 
 # 리눅스에서 os.popen('hostname -I').read().strip() (내부)
 in_ip = socket.gethostbyname(socket.gethostname())
@@ -91,7 +105,8 @@ def captureFrames():
     global video_frame, thread_lock, number_detect, detect_result
     #아래 코드는 윈도우에서 쓸때로 리눅스에선 cap = cv2.VideoCapture(0)
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_w)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_h)
     while True:
         ret, frame = cap.read()
         
@@ -119,7 +134,7 @@ def captureFrames():
         ret, thresh = cv2.threshold(img_blurred, 200, 255, cv2.THRESH_BINARY_INV)
         #thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
 
-        contours = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
         #temp_result = np.zeros((height, width, channel), dtype=np.uint8)
         
         contours_dict =[]
@@ -218,7 +233,7 @@ def main():
             
         return redirect('/')
     
-    return render_template('index.html', result = detect_result)
+    return render_template('index.html', result = detect_result, ipaddr = in_ipaddr)
 
 @app.route('/result', methods=["GET", "POST"])
 def d_result():
