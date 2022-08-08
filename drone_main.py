@@ -8,7 +8,7 @@ import threading
 import json
 import requests
 import socket
-### ver.2 red_detect version ###
+### ver.2 red_detect version edit: 22.08.09 ###
 
 img_w = 640
 img_h = 480
@@ -54,10 +54,11 @@ print(in_ip, ex_ip)
 #현재 폴더 위치 획득
 now_dir = os.path.dirname(os.path.abspath(__file__))
 
+'''수정 요함'''
 # 붉은 부분만 검출하기 위한 초기값들
 hsv = 0
-color_range = 8 # 빨간색으로 인식할 범위
-threshold_S = 30 # 채도 하한값
+color_range = 7 # 빨간색으로 인식할 범위
+threshold_S = 100 # 채도 하한값
 threshold_V = 30 # 명도 하한값
 
 
@@ -74,7 +75,9 @@ def load_train_data(file_name):
         train = data['train']
         train_labels = data['train_labels']
     return train, train_labels
+
 n = 1
+
 def resize120(image):
     global n
     gray_resize = cv2.resize(image, (50, 70))
@@ -128,10 +131,25 @@ def captureFrames():
         img_result = cv2.bitwise_and(frame, frame, mask=img_mask)
         img_result = cv2.bitwise_not(img_result) #색반전
         img_gray = cv2.cvtColor(img_result, cv2.COLOR_BGR2GRAY)
+
+        # 블러 처리를 통한 노이즈 제거
+        img_blurred = cv2.GaussianBlur(img_gray, ksize=(15,15), sigmaX=0) 
+        
+        ''' 숫자가 너무 굵어짐이 우려 '''        
+        # 마스킹 영역(반전됨)의 구멍 제거(opening)
+        kernel = np.ones((3, 3), np.uint8)
+        opening = cv2.morphologyEx(img_blurred, cv2.MORPH_OPEN, kernel, 2)
+
+        # 마스킹 영역(반전됨)의 팽창(erosion)
+        kernal = np.ones((5, 3), np.uint8)
+        erosion = cv2.erode(opening, kernal, iterations=2)
     
-        #Adaptive Thresholding
-        img_blurred = cv2.GaussianBlur(img_gray, ksize=(15,15), sigmaX=0) #노이즈 블러
-        ret, thresh = cv2.threshold(img_blurred, 200, 255, cv2.THRESH_BINARY_INV)
+        # 팽창된 마스킹 영역 축소(dilation)
+        kernal = np.ones((5, 3), np.uint8)
+        dilation = cv2.dilate(erosion, kernal, iterations=2)
+
+        # Thresholding
+        ret, thresh = cv2.threshold(dilation, 200, 255, cv2.THRESH_BINARY_INV)
         #thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
 
         contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -143,10 +161,11 @@ def captureFrames():
             x, y, w, h = cv2.boundingRect(contour)
             #temp_result = cv2.rectangle(temp_result, (x, y), (x+w, y+h), (0,0,255), 3)
             contours_dict.append({'contour':contour, 'x':x, 'y':y, 'w':w, 'h':h, 'cx': x+(w/2), 'cy': y+(h/2)})
-    
+
+        '''수정 요함'''
         Min_area = 300
         Min_width, Min_height = 10, 40
-        min_ratio, max_ratio = 0.1, 1
+        min_ratio, max_ratio = 0.1, 1.5
     
         possible_contours = []
         cnt = 0
