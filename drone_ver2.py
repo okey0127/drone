@@ -43,7 +43,6 @@ def resize120(image):
     global gray_resize
     gray_resize = cv2.resize(image, (50, 70))
     ret, gray_resize = cv2.threshold(gray_resize, 127, 255, cv2.THRESH_BINARY)
-    print(gray_resize.shape)
     # 최종적으로는 (1 x 3500) 크기로 반환합니다.
     return gray_resize.reshape(-1, 3500).astype(np.float32)
 
@@ -51,7 +50,10 @@ def resize120(image):
 def img_save():
     global n
     if dist_num < 10:
-        print(dist_num)
+        #폴더가 없으면 생성
+        path = now_dir + f'/number/image/number_{dist_num}'
+        if not os.path.exists(path):
+            os.mkdir(path)
         save_file = '/number/image/number_%d/%dnumber.jpg' % (dist_num, n)
         while True:
             if os.path.exists(now_dir + save_file):
