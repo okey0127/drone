@@ -28,14 +28,12 @@ const byte interruptPin4 = 19; //CH4 좌우 서보2
 const byte interruptPin5 = 20; //CH5 코일건 스위치 ON/OFF
 const byte interruptPin6 = 21; //CH1 서보 초기화 
 
+// 미션부 초기값 설정
 int rlangle = 90;
-int uangle = 90;
-
 Servo servo1;
-Servo servo2;
 
-const int s1_pin = 10;
-const int s2_pin = 11;
+// 미션부 핀 할당
+const int s_pin = 10;
 
 //3번 채널 PWM 신호측정
 void calcInput3()
@@ -114,57 +112,39 @@ void calcInput6()
 }
 void setup() {
   Serial.begin(9600);
-  // 채널 할당 -> 작년 것과 동일하게 작성 / 신호가 바뀔(change) 때 인터럽트 발생 하여 calcInput을 실행시킨다
-  attachInterrupt(digitalPinToInterrupt(interruptPin3),calcInput3,CHANGE); //
-  attachInterrupt(digitalPinToInterrupt(interruptPin4),calcInput4,CHANGE); //
-  attachInterrupt(digitalPinToInterrupt(interruptPin5),calcInput5,CHANGE); //
-  attachInterrupt(digitalPinToInterrupt(interruptPin6),calcInput6,CHANGE); //
-  servo1.attach(s1_pin);
-  servo1.write(uangle);
-  delay(10);
-  servo2.attach(s2_pin);
-  servo2.write(rlangle);
+  // 채널 할당 -> 작년 것과 동일하게 작성 / 신호가 바뀔때 (change[HIGH <-> LOW]) 인터럽트 발생 하여 calcInput을 실행시킨다
+  attachInterrupt(digitalPinToInterrupt(interruptPin3),calcInput3,CHANGE); 
+  attachInterrupt(digitalPinToInterrupt(interruptPin4),calcInput4,CHANGE); 
+  attachInterrupt(digitalPinToInterrupt(interruptPin5),calcInput5,CHANGE); 
+  attachInterrupt(digitalPinToInterrupt(interruptPin6),calcInput6,CHANGE); 
+  servo1.attach(s_pin);
+  servo1.write(rlangle);
   delay(10);
 }
 
 void loop() {
-  // 위 아래 움직임
+  // None
   if(bNewThrottleSignal3)
   {
-    if(nThrottleIn3<1400){
-      if(uangle<110){
-        uangle+=1;
-        servo1.attach(s1_pin);
-        servo1.write(uangle);
-        delay(20);
-      }
-     }
-    else if(nThrottleIn3>1700){
-      if(uangle>70){
-        uangle -= 1;
-        servo1.attach(s1_pin);
-        servo1.write(uangle);
-        delay(20);
-      }
-    }
+    
     bNewThrottleSignal3 = false;
   }
-  // 좌 우 움직임
+  // 좌, 우 각도조절 서보모터 움직임
   if(bNewThrottleSignal4)
   {
     if(nThrottleIn4>1700){
       if(rlangle<135){
         rlangle+=1;
-        servo2.attach(s2_pin);
-        servo2.write(rlangle);
+        servo1.attach(s_pin);
+        servo1.write(rlangle);
         delay(20);
       }
      }
     else if(nThrottleIn4<1400){
       if(rlangle>45){
         rlangle -= 1;
-        servo2.attach(s2_pin);
-        servo2.write(rlangle);
+        servo1.attach(s_pin);
+        servo1.write(rlangle);
         delay(20);
       }
     }
@@ -179,12 +159,9 @@ void loop() {
   if(bNewThrottleSignal6)
   {
     if (nThrottleIn6>1100){
-      uangle = 90;
       rlangle = 90;
-      servo1.attach(s1_pin);
-      servo1.write(uangle);
-      servo2.attach(s2_pin);
-      servo2.write(rlangle);
+      servo1.attach(s_pin);
+      servo1.write(rlangle);
       delay(100);
     }
     bNewThrottleSignal6 = false;
