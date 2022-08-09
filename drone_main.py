@@ -201,6 +201,8 @@ def captureFrames():
         if number_detect == 'Y':
             try:
                 detect_result = []
+                if len(possible_contours) == 0:
+                    raise Exception('no number')
                 for contour in possible_contours:
                     #이미지 크롭
                     num_img = thresh[contour['y']:contour['y']+contour['h'],contour['x']:contour['x']+contour['w']]
@@ -226,7 +228,7 @@ def captureFrames():
                     detect_result.append(int(check(test, train, train_labels)))
                 number_detect = 'N'
             except:
-                detect_result = 'no image'
+                detect_result = 'no number'
                 number_detect = 'N'
                             
     cap.release()
