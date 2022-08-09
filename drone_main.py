@@ -7,7 +7,8 @@ import math
 import threading 
 import json
 import requests
-import socket
+from RPLCD.i2c import CharLCD
+
 ### ver.2 red_detect version edit: 22.08.09 ###
 
 img_w = 640
@@ -27,6 +28,7 @@ video_frame = None
 global thread_lock 
 thread_lock = threading.Lock()
 
+lcd=CharLCD('PCF8574', 0x27)
 #인터넷 접속 될때 까지 무한루프를 돌린다.
 i_flag = 'Y'
 while True:
@@ -41,10 +43,12 @@ while True:
         # 경고문은 추후 LCD로 출력되도록
         if i_flag == 'Y':
             print('No internet')
+            lcd.cursor_pos=(0,0)
+            lcd.write_string('No internet')
             i_flag = 'N'
 
 # 리눅스에서 os.popen('hostname -I').read().strip() (내부)
-in_ip = socket.gethostbyname(socket.gethostname())
+in_ip = os.popen('hostname -I').read().strip()
 in_ip_video = 'http://'+in_ip+':8080/video'
 
 in_ipaddr = {'ip':in_ip, 'video':in_ip_video}
@@ -53,6 +57,11 @@ ex_ipaddr = {'ip':ex_ip, 'video':ex_ip_video}
 print(in_ip, ex_ip)
 #현재 폴더 위치 획득
 now_dir = os.path.dirname(os.path.abspath(__file__))
+
+lcd.cursor_pos=(0,0)
+lcd.write_string(in_ip)
+lcd.cursor_pos=(1,0)
+lcd.write_string(ex_ip)
 
 '''수정 요함'''
 # 붉은 부분만 검출하기 위한 초기값들
@@ -107,7 +116,7 @@ app = Flask(__name__)
 def captureFrames():
     global video_frame, thread_lock, number_detect, detect_result
     #아래 코드는 윈도우에서 쓸때로 리눅스에선 cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_w)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_h)
     while True:
@@ -271,3 +280,4 @@ if __name__ == '__main__':
     # While it can be run on any feasible IP, IP = 0.0.0.0 renders the web app on
     # the host machine's localhost and is discoverable by other machines on the same network 
     app.run(host="0.0.0.0", port="8080")
+
