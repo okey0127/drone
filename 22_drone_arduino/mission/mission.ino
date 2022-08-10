@@ -23,9 +23,9 @@ volatile boolean bNewThrottleSignal5 = false;
 volatile boolean bNewThrottleSignal6 = false; 
 
 //인터럽트 핀 할당
-const byte interruptPin3 = 18; // CH3 상하 서보
-const byte interruptPin4 = 19; //CH4 좌우 서보2
-const byte interruptPin5 = 20; //CH5 코일건 스위치 ON/OFF
+const byte interruptPin3 = 18; // CH3
+const byte interruptPin4 = 19; //CH4 좌우 서보
+const byte interruptPin5 = 20; //CH5 코일건 스위치 ON/OFF 장전
 const byte interruptPin6 = 21; //CH1 서보 초기화 
 
 // 미션부 초기값 설정
@@ -33,7 +33,9 @@ int rlangle = 90;
 Servo servo1;
 
 // 미션부 핀 할당
-const int s_pin = 10;
+const int charge_pin = 8; // 릴레이 1번(충전)
+const int shoot_pin = 9; // 릴레이 2번(발사)
+const int s_pin = 11;
 
 char flag = 'Y';
 
@@ -114,6 +116,10 @@ void calcInput6()
 }
 void setup() {
   Serial.begin(9600);
+  pinMode(charge_pin, OUTPUT);
+  pinMode(shoot_pin, OUTPUT);
+  digitalWrite(charge_pin, HIGH);
+  digitalWrite(shoot_pin, HIGH);
   // 채널 할당 -> 작년 것과 동일하게 작성 / 신호가 바뀔때 (change[HIGH <-> LOW]) 인터럽트 발생 하여 calcInput을 실행시킨다
   attachInterrupt(digitalPinToInterrupt(interruptPin3),calcInput3,CHANGE); 
   attachInterrupt(digitalPinToInterrupt(interruptPin4),calcInput4,CHANGE); 
@@ -156,8 +162,17 @@ void loop() {
   if(bNewThrottleSignal5)
   {
     if (nThrottleIn5 < 1350 && flag == 'Y'){
-      // 충전 -> 장전 -> 발사
+      // 충전 -> 발사 -> 장전
       flag = 'N';
+       // 충전
+       digitalWrite(charge_pin, LOW);
+       delay(500);
+       digitalWrite(charge_pin, HIGH);
+       
+       //발사
+       digitalWrite(shoot_pin, LOW);
+       delay(100);
+       digitalWrite(shoot_pin, HIGH);
       }
      else if(nThrottleIn5 > 1800){
       flag = 'Y';
