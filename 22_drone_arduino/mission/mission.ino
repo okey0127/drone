@@ -35,6 +35,8 @@ Servo servo1;
 // 미션부 핀 할당
 const int s_pin = 10;
 
+char flag = 'Y';
+
 //3번 채널 PWM 신호측정
 void calcInput3()
 {
@@ -153,6 +155,13 @@ void loop() {
   // 코일건 발사
   if(bNewThrottleSignal5)
   {
+    if (nThrottleIn5 < 1350 && flag == 'Y'){
+      // 충전 -> 장전 -> 발사
+      flag = 'N';
+      }
+     else if(nThrottleIn5 > 1800){
+      flag = 'Y';
+      }
     bNewThrottleSignal5 = false;
   }
   // 각도조절 서보 동작 초기위치로
