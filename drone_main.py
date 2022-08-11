@@ -9,7 +9,7 @@ import json
 import requests
 from RPLCD.i2c import CharLCD
 
-### ver.2 red_detect version edit: 22.08.09 ###
+### ver.2 red_detect version edit: 22.08.12 ###
 
 img_w = 640
 img_h = 480
@@ -28,7 +28,6 @@ video_frame = None
 global thread_lock 
 thread_lock = threading.Lock()
 
-lcd=CharLCD('PCF8574', 0x27)
 #인터넷 접속 될때 까지 무한루프를 돌린다.
 i_flag = 'Y'
 while True:
@@ -43,8 +42,6 @@ while True:
         # 경고문은 추후 LCD로 출력되도록
         if i_flag == 'Y':
             print('No internet')
-            lcd.cursor_pos=(0,0)
-            lcd.write_string('No internet')
             i_flag = 'N'
 
 # 리눅스에서 os.popen('hostname -I').read().strip() (내부)
@@ -57,11 +54,6 @@ ex_ipaddr = {'ip':ex_ip, 'video':ex_ip_video}
 print(in_ip, ex_ip)
 #현재 폴더 위치 획득
 now_dir = os.path.dirname(os.path.abspath(__file__))
-
-lcd.cursor_pos=(0,0)
-lcd.write_string(in_ip)
-lcd.cursor_pos=(1,0)
-lcd.write_string(ex_ip)
 
 '''수정 요함'''
 # 붉은 부분만 검출하기 위한 초기값들
@@ -198,6 +190,9 @@ def captureFrames():
             with thread_lock:
                 video_frame = frame.copy()
         
+        # 코드에 딜레이를 줘서 연산량을 줄인다. 이것으로 라즈베리 파이의 속도 개선이 되는지 확인
+        time.sleep(0.2)
+        # 숫자 판별
         if number_detect == 'Y':
             try:
                 detect_result = []
