@@ -7,7 +7,6 @@ import math
 import threading 
 import json
 import requests
-from RPLCD.i2c import CharLCD
 
 ### ver.2 red_detect version edit: 22.08.12 ###
 
@@ -100,7 +99,7 @@ def check(test, train, train_labels):
     # 가장 가까운 5개의 글자를 찾아, 어떤 숫자에 해당하는지 찾는다.
     ret, result, neighbours, dist = knn.findNearest(test, k=5)
     return result
-
+    
 # Flask server 선언
 app = Flask(__name__)
 
