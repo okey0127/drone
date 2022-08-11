@@ -37,7 +37,8 @@ const int charge_pin = 8; // 릴레이 1번(충전)
 const int shoot_pin = 9; // 릴레이 2번(발사)
 const int s_pin = 11;
 
-char flag = 'Y';
+char s_flag = 'Y';
+char r_flag = 'Y';
 
 //3번 채널 PWM 신호측정
 void calcInput3()
@@ -161,9 +162,10 @@ void loop() {
   // 코일건 발사
   if(bNewThrottleSignal5)
   {
-    if (nThrottleIn5 < 1350 && flag == 'Y'){
-      // 충전 -> 발사 -> 장전
-      flag = 'N';
+    if (nThrottleIn5 < 1200 && s_flag == 'Y'){
+      // 스틱 위
+      s_flag = 'N';
+      r_flag = 'Y';
        // 충전
        digitalWrite(charge_pin, LOW);
        delay(500);
@@ -174,8 +176,15 @@ void loop() {
        delay(100);
        digitalWrite(shoot_pin, HIGH);
       }
+     else if(nThrottleIn5 < 1600 && nThrottleIn5 > 1400 && r_flag=='Y'){
+      //스틱 중간
+      s_flag = 'Y';
+      r_flag = 'N';
+      //장전
+      
+     }
      else if(nThrottleIn5 > 1800){
-      flag = 'Y';
+      // 스틱 아래
       }
     bNewThrottleSignal5 = false;
   }
@@ -191,5 +200,6 @@ void loop() {
     bNewThrottleSignal6 = false;
   }
   // put your main code here, to run repeatedly:
+  Serial.print("s_Flag: ");Serial.print(s_flag); Serial.print("r_flag: ");Serial.println(r_flag); 
   Serial.print("pwm  ");Serial.print(nThrottleIn3);Serial.print("|");Serial.print(nThrottleIn4);Serial.print("|");Serial.print(nThrottleIn5);Serial.print("|");Serial.print(nThrottleIn6);Serial.print("|\n");
 }
