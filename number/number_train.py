@@ -13,7 +13,7 @@ print(p_train.shape)
 
 # 어떤 숫자에 대한 데이터를 학습시킬 것인지 지정
 for number in range(10):
-    data_path = now_dir + '/image/{}'.format(number)
+    data_path = now_dir + '/image/number_{}'.format(number)
 
     # 축적된 숫자 데이터의 갯수
     data_num = len(os.listdir(data_path))
