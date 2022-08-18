@@ -102,22 +102,23 @@ while True:
     # 블러 처리를 통한 노이즈 제거
     img_blurred = cv2.GaussianBlur(img_gray, ksize=(15, 15), sigmaX=0)
     cv2.imshow('blurr', img_blurred)
-
-
+    
+    '''
     # 마스킹 영역(반전됨)의 구멍 제거(opening)
     kernel = np.ones((3, 3), np.uint8)
-    opening = cv2.morphologyEx(img_blurred, cv2.MORPH_OPEN, kernel, 2)
+    img_blurred = cv2.morphologyEx(img_blurred, cv2.MORPH_OPEN, kernel, 2)
 
     # 마스킹 영역(반전됨)의 팽창(erosion)
     kernal = np.ones((5, 3), np.uint8)
-    erosion = cv2.erode(opening, kernal, iterations=2)
+    img_blurred = cv2.erode(img_blurred, kernal, iterations=2)
 
     # 팽창된 마스킹 영역 축소(dilation)
     kernal = np.ones((5, 3), np.uint8)
-    dilation = cv2.dilate(erosion, kernal, iterations=2)
-
+    img_blurred = cv2.dilate(img_blurred, kernal, iterations=2)
+    '''
+    
     # Thresholding
-    ret, thresh = cv2.threshold(dilation, 220, 255, cv2.THRESH_BINARY_INV)
+    ret, thresh = cv2.threshold(img_blurred, 220, 255, cv2.THRESH_BINARY_INV)
     # thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 19, 9)
     cv2.imshow('thresh', thresh)
 
@@ -154,7 +155,7 @@ while True:
     # 송출 영상은 이에 해당함
     cv2.imshow('img', frame)
 
-    key_input = cv2.waitKey(300) # waitKey 함수로 프레임 조절 가능, 영상 송출 및 연산속도 느릴 시 숫자 키울것
+    key_input = cv2.waitKey(50) # waitKey 함수로 프레임 조절 가능, 영상 송출 및 연산속도 느릴 시 숫자 키울것
     if key_input == ord('q'):
         break
     elif key_input == ord('a'):
@@ -169,15 +170,21 @@ while True:
                 # 이미지에 여백을 준다
                 num_img = cv2.copyMakeBorder(num_img, top=clearance_y, bottom=clearance_y, left=clearance_x,
                                              right=clearance_x, borderType=cv2.BORDER_CONSTANT, value=(0, 0, 0))
-
-                # Adaptive Thresholding // 한번 더 이 작업을 수행하여 숫자의 형태를 분명하게 해준다.
+                
+                plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
+                plt.show()
+                
+                # Adaptive Thresholding // 한번 더 이 작업을 수행하여 숫자의 형태를 분명하게 해준다. 
                 num_img_blurred = cv2.GaussianBlur(num_img, ksize=(5, 5), sigmaX=0)  # 노이즈 블러
                 ret, num_thresh = cv2.threshold(num_img_blurred, 127, 255, cv2.THRESH_BINARY)
                 # num_thresh = cv2.adaptiveThreshold(num_img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9)
-
-                cv2.imwrite(now_dir + '/number.jpg', num_thresh)
-                plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
+                
+                plt.imshow(cv2.cvtColor(num_img_blurred, cv2.COLOR_BGR2RGB))
                 plt.show()
+                
+                cv2.imwrite(now_dir + '/number.jpg', num_thresh)
+                #plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
+                #plt.show()
 
                 # KNN 머신러닝데이터로 대조하여 결과 출력
                 FILE_NAME = now_dir + '/number/trained.npz'

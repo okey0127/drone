@@ -7,8 +7,9 @@ import math
 import threading 
 import json
 import requests
-
-### ver.2 red_detect version edit: 22.08.12 ###
+import time
+import socket
+### ver.2 red_detect version edit: 22.08.09 ###
 
 img_w = 640
 img_h = 480
@@ -18,6 +19,9 @@ detect_result = '-'
 
 global number_detect
 number_detect = 'N'
+
+global num_ex
+num_ex = 'N'
 
 # Image frame sent to the Flask object
 global video_frame
@@ -44,7 +48,7 @@ while True:
             i_flag = 'N'
 
 # 리눅스에서 os.popen('hostname -I').read().strip() (내부)
-in_ip = os.popen('hostname -I').read().strip()
+in_ip = socket.gethostbyname(socket.gethostname())
 in_ip_video = 'http://'+in_ip+':8080/video'
 
 in_ipaddr = {'ip':in_ip, 'video':in_ip_video}
@@ -99,15 +103,15 @@ def check(test, train, train_labels):
     # 가장 가까운 5개의 글자를 찾아, 어떤 숫자에 해당하는지 찾는다.
     ret, result, neighbours, dist = knn.findNearest(test, k=5)
     return result
-    
+
 # Flask server 선언
 app = Flask(__name__)
 
 # main loop code -- 영상 스트리밍, 이미지 처리, 이미지 수집 --
 def captureFrames():
-    global video_frame, thread_lock, number_detect, detect_result
+    global video_frame, thread_lock, number_detect, detect_result, num_ex
     #아래 코드는 윈도우에서 쓸때로 리눅스에선 cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_w)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_h)
     while True:
@@ -135,21 +139,22 @@ def captureFrames():
         # 블러 처리를 통한 노이즈 제거
         img_blurred = cv2.GaussianBlur(img_gray, ksize=(15,15), sigmaX=0) 
         
-        ''' 숫자가 너무 굵어짐이 우려 '''        
-        # 마스킹 영역(반전됨)의 구멍 제거(opening)
-        kernel = np.ones((3, 3), np.uint8)
-        opening = cv2.morphologyEx(img_blurred, cv2.MORPH_OPEN, kernel, 2)
+        # 체크박스 체크하면 구멍 제거 코드 실행  연산이 많아짐을 우려
+        if num_ex == 'Y':
+            # 마스킹 영역(반전됨)의 구멍 제거(opening)
+            kernel = np.ones((3, 3), np.uint8)
+            img_blurred = cv2.morphologyEx(img_blurred, cv2.MORPH_OPEN, kernel, 2)
 
-        # 마스킹 영역(반전됨)의 팽창(erosion)
-        kernal = np.ones((5, 3), np.uint8)
-        erosion = cv2.erode(opening, kernal, iterations=2)
+            # 마스킹 영역(반전됨)의 팽창(erosion)
+            kernal = np.ones((5, 3), np.uint8)
+            img_blurred = cv2.erode(img_blurred, kernal, iterations=2)
     
-        # 팽창된 마스킹 영역 축소(dilation)
-        kernal = np.ones((5, 3), np.uint8)
-        dilation = cv2.dilate(erosion, kernal, iterations=2)
+            # 팽창된 마스킹 영역 축소(dilation)
+            kernal = np.ones((5, 3), np.uint8)
+            img_blurred = cv2.dilate(img_blurred, kernal, iterations=2)
 
         # Thresholding
-        ret, thresh = cv2.threshold(dilation, 200, 255, cv2.THRESH_BINARY_INV)
+        ret, thresh = cv2.threshold(img_blurred, 200, 255, cv2.THRESH_BINARY_INV)
         #thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
 
         contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -188,15 +193,16 @@ def captureFrames():
         except:
             with thread_lock:
                 video_frame = frame.copy()
-        
+                
         # 코드에 딜레이를 줘서 연산량을 줄인다. 이것으로 라즈베리 파이의 속도 개선이 되는지 확인
-        time.sleep(0.2)
+        #time.sleep(0.2)
+        
         # 숫자 판별
         if number_detect == 'Y':
             try:
                 detect_result = []
                 if len(possible_contours) == 0:
-                    raise Exception('no number')
+                    raise Exception('No number')
                 for contour in possible_contours:
                     #이미지 크롭
                     num_img = thresh[contour['y']:contour['y']+contour['h'],contour['x']:contour['x']+contour['w']]
@@ -212,7 +218,6 @@ def captureFrames():
                     #num_thresh = cv2.adaptiveThreshold(num_img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
 
                     cv2.imwrite(now_dir+'/number.jpg', num_thresh)
-                    
             
                     #KNN 머신러닝데이터로 대조하여 결과 출력
                     FILE_NAME = now_dir + '/number/trained.npz'
@@ -222,7 +227,7 @@ def captureFrames():
                     detect_result.append(int(check(test, train, train_labels)))
                 number_detect = 'N'
             except:
-                detect_result = 'no number'
+                detect_result = 'No number'
                 number_detect = 'N'
                             
     cap.release()
@@ -249,12 +254,16 @@ def streamFrames():
 
 @app.route('/', methods=['GET', 'POST'])
 def main():
-    global number_detect
+    global number_detect, num_ex
     if request.method == 'POST':
         a = request.form.get('detect')
+        b = request.form['expansion']
         if a == 'detect':
             number_detect = 'Y'
-            
+        if b=='Y':
+            num_ex = 'Y'
+        if b=='N':
+            num_ex = 'N'
         return redirect('/')
     
     return render_template('index.html', result = detect_result, ipaddr = in_ipaddr)
@@ -276,4 +285,3 @@ if __name__ == '__main__':
     # While it can be run on any feasible IP, IP = 0.0.0.0 renders the web app on
     # the host machine's localhost and is discoverable by other machines on the same network 
     app.run(host="0.0.0.0", port="8080")
-
