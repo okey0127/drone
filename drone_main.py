@@ -9,7 +9,7 @@ import json
 import requests
 import time
 import socket
-### ver.2 red_detect version edit: 22.08.09 ###
+### ver.2 red_detect version edit: 22.08.19 ###
 
 img_w = 640
 img_h = 480
@@ -173,14 +173,11 @@ def captureFrames():
         min_ratio, max_ratio = 0.1, 1.5
     
         possible_contours = []
-        cnt = 0
         for d in contours_dict:
             area = d['w'] * d['h']
             ratio = d['w'] / d['h']
             
             if area > Min_area and d['w'] > Min_width and d['h'] > Min_height and min_ratio < ratio < max_ratio:
-                d['idx'] = cnt
-                cnt += 1
                 possible_contours.append(d)    
 
         try:
