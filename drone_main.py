@@ -257,16 +257,19 @@ def main():
     global number_detect, num_ex
     if request.method == 'POST':
         a = request.form.get('detect')
-        b = request.form['expansion']
+        b = request.form.get('expansion')
         if a == 'detect':
             number_detect = 'Y'
         if b=='Y':
             num_ex = 'Y'
         if b=='N':
-            num_ex = 'N'
+           num_ex = 'N'
         return redirect('/')
-    
-    return render_template('index.html', result = detect_result, ipaddr = in_ipaddr)
+    if num_ex == 'N':
+        ex = '보정X'
+    elif num_ex == 'Y':
+        ex = '보정O'
+    return render_template('index.html', result = detect_result, ex=ex)
 
 @app.route('/result', methods=["GET", "POST"])
 def d_result():
