@@ -279,7 +279,7 @@ def main():
         ex = '보정X'
     elif num_ex == 'Y':
         ex = '보정O'
-    return render_template('index.html', result = detect_result, ex=ex, object_detect=object_detect)
+    return render_template('index2.html', result = detect_result, ex=ex, object_detect=object_detect)
 
 @app.route('/result', methods=["GET", "POST"])
 def d_result():
