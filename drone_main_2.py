@@ -9,7 +9,7 @@ import json
 import requests
 import time
 import socket
-### ver.2 red_detect version edit: 22.08.09 ###
+### ver.2 red_detect version edit: 22.08.21 ###
 ## 객체 검출 ON/OFF 및 송출 영상 GRAY ##
 
 img_w = 640
@@ -115,7 +115,7 @@ app = Flask(__name__)
 def captureFrames():
     global video_frame, thread_lock, number_detect, detect_result, num_ex
     #아래 코드는 윈도우에서 쓸때로 리눅스에선 cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_w)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_h)
     while True:
@@ -192,13 +192,13 @@ def captureFrames():
                 frame= cv2.rectangle(frame, (x, y), (x+w, y+h), (0,0,255), 3)
             with thread_lock:
                 video_frame = frame.copy()
-                video_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                video_frame = cv2.cvtColor(video_frame, cv2.COLOR_BGR2GRAY)
             if object_detect == 'OFF':
                 possible_contours = []
         except:
             with thread_lock:
                 video_frame = frame.copy()
-                video_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                video_frame = cv2.cvtColor(video_frame, cv2.COLOR_BGR2GRAY)
                 
         # 코드에 딜레이를 줘서 연산량을 줄인다. 이것으로 라즈베리 파이의 속도 개선이 되는지 확인
         #time.sleep(0.2)
@@ -300,3 +300,4 @@ if __name__ == '__main__':
     # While it can be run on any feasible IP, IP = 0.0.0.0 renders the web app on
     # the host machine's localhost and is discoverable by other machines on the same network 
     app.run(host="0.0.0.0", port="8080")
+
