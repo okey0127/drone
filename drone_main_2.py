@@ -9,8 +9,8 @@ import json
 import requests
 import time
 import socket
-### ver.2 red_detect version edit: 22.08.20 ###
-### 객체 검출 ON/OFF ###
+### ver.2 red_detect version edit: 22.08.09 ###
+## 객체 검출 ON/OFF 및 송출 영상 GRAY ##
 
 img_w = 640
 img_h = 480
@@ -192,11 +192,13 @@ def captureFrames():
                 frame= cv2.rectangle(frame, (x, y), (x+w, y+h), (0,0,255), 3)
             with thread_lock:
                 video_frame = frame.copy()
+                video_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             if object_detect == 'OFF':
                 possible_contours = []
         except:
             with thread_lock:
                 video_frame = frame.copy()
+                video_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 
         # 코드에 딜레이를 줘서 연산량을 줄인다. 이것으로 라즈베리 파이의 속도 개선이 되는지 확인
         #time.sleep(0.2)
@@ -279,7 +281,7 @@ def main():
         ex = '보정X'
     elif num_ex == 'Y':
         ex = '보정O'
-    return render_template('index2.html', result = detect_result, ex=ex, object_detect=object_detect)
+    return render_template('index.html', result = detect_result, ex=ex, object_detect=object_detect)
 
 @app.route('/result', methods=["GET", "POST"])
 def d_result():
