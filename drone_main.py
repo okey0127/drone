@@ -118,6 +118,7 @@ def captureFrames():
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_w)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_h)
+    
     while True:
         ret, frame = cap.read()
         
@@ -184,7 +185,7 @@ def captureFrames():
             
                 if area > Min_area and d['w'] > Min_width and d['h'] > Min_height and min_ratio < ratio < max_ratio:
                     possible_contours.append(d)    
-
+            
         try:
             for contour in possible_contours:
                 x, y, w, h = cv2.boundingRect(contour['contour'])
@@ -193,14 +194,14 @@ def captureFrames():
             with thread_lock:
                 video = frame.copy()
                 video = cv2.cvtColor(video, cv2.COLOR_BGR2GRAY)
-                video_frame = np.resize(video, None, fx = 0.5, fy=0.5, interpolation = cv2.INTER_AREA)
+                video_frame = cv2.resize(video, None, fx = 0.5, fy=0.5, interpolation = cv2.INTER_AREA)
             if object_detect == 'OFF':
                 possible_contours = []
         except:
             with thread_lock:
                 video = frame.copy()
                 video = cv2.cvtColor(video, cv2.COLOR_BGR2GRAY)
-                video_frame = np.resize(video, None, fx = 0.5, fy=0.5, interpolation = cv2.INTER_AREA)
+                video_frame = cv2.resize(video, None, fx = 0.5, fy=0.5, interpolation = cv2.INTER_AREA)
                 
         # 코드에 딜레이를 줘서 연산량을 줄인다. 이것으로 라즈베리 파이의 속도 개선이 되는지 확인
         #time.sleep(0.2)
