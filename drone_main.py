@@ -9,13 +9,17 @@ import json
 import requests
 import time
 import socket
-### ver.2 red_detect version edit: 22.08.19 ###
+### ver.2 red_detect version edit: 22.08.21 ###
+## 객체 검출 ON/OFF 및 송출 영상 GRAY ##
 
 img_w = 640
 img_h = 480
 
 global detect_result
 detect_result = '-'
+
+global object_detect
+object_detect = "OFF"
 
 global number_detect
 number_detect = 'N'
@@ -111,7 +115,7 @@ app = Flask(__name__)
 def captureFrames():
     global video_frame, thread_lock, number_detect, detect_result, num_ex
     #아래 코드는 윈도우에서 쓸때로 리눅스에선 cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_w)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_h)
     while True:
@@ -123,62 +127,63 @@ def captureFrames():
         
         height, width, channel = frame.shape
         
-        # 원본 영상을 HSV 영상으로 변환
-        img_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # 범위 값으로 HSV 이미지에서 마스크를 생성합니다.
-        img_mask1 = cv2.inRange(img_hsv, lower_red1, upper_red1)
-        img_mask2 = cv2.inRange(img_hsv, lower_red2, upper_red2)
-        img_mask3 = cv2.inRange(img_hsv, lower_red3, upper_red3)
-        img_mask = img_mask1 | img_mask2 | img_mask3
+        if object_detect == 'ON':
+            # 원본 영상을 HSV 영상으로 변환
+            img_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            # 범위 값으로 HSV 이미지에서 마스크를 생성합니다.
+            img_mask1 = cv2.inRange(img_hsv, lower_red1, upper_red1)
+            img_mask2 = cv2.inRange(img_hsv, lower_red2, upper_red2)
+            img_mask3 = cv2.inRange(img_hsv, lower_red3, upper_red3)
+            img_mask = img_mask1 | img_mask2 | img_mask3
     
-        # 마스크 이미지로 원본 이미지에서 범위값에 해당되는 영상 부분을 획득합니다.
-        img_result = cv2.bitwise_and(frame, frame, mask=img_mask)
-        img_result = cv2.bitwise_not(img_result) #색반전
-        img_gray = cv2.cvtColor(img_result, cv2.COLOR_BGR2GRAY)
+            # 마스크 이미지로 원본 이미지에서 범위값에 해당되는 영상 부분을 획득합니다.
+            img_result = cv2.bitwise_and(frame, frame, mask=img_mask)
+            img_result = cv2.bitwise_not(img_result) #색반전
+            img_gray = cv2.cvtColor(img_result, cv2.COLOR_BGR2GRAY)
 
-        # 블러 처리를 통한 노이즈 제거
-        img_blurred = cv2.GaussianBlur(img_gray, ksize=(15,15), sigmaX=0) 
+            # 블러 처리를 통한 노이즈 제거
+            img_blurred = cv2.GaussianBlur(img_gray, ksize=(15,15), sigmaX=0) 
         
-        # 체크박스 체크하면 구멍 제거 코드 실행  연산이 많아짐을 우려
-        if num_ex == 'Y':
-            # 마스킹 영역(반전됨)의 구멍 제거(opening)
-            kernel = np.ones((3, 3), np.uint8)
-            img_blurred = cv2.morphologyEx(img_blurred, cv2.MORPH_OPEN, kernel, 2)
+            # 체크박스 체크하면 구멍 제거 코드 실행  연산이 많아짐을 우려
+            if num_ex == 'Y':
+                # 마스킹 영역(반전됨)의 구멍 제거(opening)
+                kernel = np.ones((3, 3), np.uint8)
+                img_blurred = cv2.morphologyEx(img_blurred, cv2.MORPH_OPEN, kernel, 2)
 
-            # 마스킹 영역(반전됨)의 팽창(erosion)
-            kernal = np.ones((5, 3), np.uint8)
-            img_blurred = cv2.erode(img_blurred, kernal, iterations=2)
+                # 마스킹 영역(반전됨)의 팽창(erosion)
+                kernal = np.ones((5, 3), np.uint8)
+                img_blurred = cv2.erode(img_blurred, kernal, iterations=2)
     
-            # 팽창된 마스킹 영역 축소(dilation)
-            kernal = np.ones((5, 3), np.uint8)
-            img_blurred = cv2.dilate(img_blurred, kernal, iterations=2)
+                # 팽창된 마스킹 영역 축소(dilation)
+                kernal = np.ones((5, 3), np.uint8)
+                img_blurred = cv2.dilate(img_blurred, kernal, iterations=2)
 
-        # Thresholding
-        ret, thresh = cv2.threshold(img_blurred, 200, 255, cv2.THRESH_BINARY_INV)
-        #thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
+            # Thresholding
+            ret, thresh = cv2.threshold(img_blurred, 200, 255, cv2.THRESH_BINARY_INV)
+            #thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
 
-        contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-        #temp_result = np.zeros((height, width, channel), dtype=np.uint8)
+            contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+            #temp_result = np.zeros((height, width, channel), dtype=np.uint8)
         
-        contours_dict =[]
+            contours_dict =[]
         
-        for contour in contours:
-            x, y, w, h = cv2.boundingRect(contour)
-            #temp_result = cv2.rectangle(temp_result, (x, y), (x+w, y+h), (0,0,255), 3)
-            contours_dict.append({'contour':contour, 'x':x, 'y':y, 'w':w, 'h':h, 'cx': x+(w/2), 'cy': y+(h/2)})
+            for contour in contours:
+                x, y, w, h = cv2.boundingRect(contour)
+                #temp_result = cv2.rectangle(temp_result, (x, y), (x+w, y+h), (0,0,255), 3)
+                contours_dict.append({'contour':contour, 'x':x, 'y':y, 'w':w, 'h':h, 'cx': x+(w/2), 'cy': y+(h/2)})
 
-        '''수정 요함'''
-        Min_area = 300
-        Min_width, Min_height = 10, 40
-        min_ratio, max_ratio = 0.1, 1.5
+            '''수정 요함'''
+            Min_area = 300
+            Min_width, Min_height = 10, 40
+            min_ratio, max_ratio = 0.1, 1.5
     
-        possible_contours = []
-        for d in contours_dict:
-            area = d['w'] * d['h']
-            ratio = d['w'] / d['h']
+            possible_contours = []
+            for d in contours_dict:
+                area = d['w'] * d['h']
+                ratio = d['w'] / d['h']
             
-            if area > Min_area and d['w'] > Min_width and d['h'] > Min_height and min_ratio < ratio < max_ratio:
-                possible_contours.append(d)    
+                if area > Min_area and d['w'] > Min_width and d['h'] > Min_height and min_ratio < ratio < max_ratio:
+                    possible_contours.append(d)    
 
         try:
             for contour in possible_contours:
@@ -186,10 +191,16 @@ def captureFrames():
                 # 송출 영상
                 frame= cv2.rectangle(frame, (x, y), (x+w, y+h), (0,0,255), 3)
             with thread_lock:
-                video_frame = frame.copy()
+                video = frame.copy()
+                video = cv2.cvtColor(video, cv2.COLOR_BGR2GRAY)
+                video_frame = np.resize(video, None, fx = 0.5, fy=0.5, interpolation = cv2.INTER_AREA)
+            if object_detect == 'OFF':
+                possible_contours = []
         except:
             with thread_lock:
-                video_frame = frame.copy()
+                video = frame.copy()
+                video = cv2.cvtColor(video, cv2.COLOR_BGR2GRAY)
+                video_frame = np.resize(video, None, fx = 0.5, fy=0.5, interpolation = cv2.INTER_AREA)
                 
         # 코드에 딜레이를 줘서 연산량을 줄인다. 이것으로 라즈베리 파이의 속도 개선이 되는지 확인
         #time.sleep(0.2)
@@ -251,22 +262,28 @@ def streamFrames():
 
 @app.route('/', methods=['GET', 'POST'])
 def main():
-    global number_detect, num_ex
+    global number_detect, num_ex, object_detect
     if request.method == 'POST':
         a = request.form.get('detect')
         b = request.form.get('expansion')
+        c = request.form.get('object')
+        
         if a == 'detect':
             number_detect = 'Y'
         if b=='Y':
             num_ex = 'Y'
         if b=='N':
            num_ex = 'N'
+        if c=='OFF':
+            object_detect = 'ON'
+        if c=='ON':
+            object_detect = 'OFF'
         return redirect('/')
     if num_ex == 'N':
         ex = '보정X'
     elif num_ex == 'Y':
         ex = '보정O'
-    return render_template('index.html', result = detect_result, ex=ex)
+    return render_template('index.html', result = detect_result, ex=ex, object_detect=object_detect)
 
 @app.route('/result', methods=["GET", "POST"])
 def d_result():
