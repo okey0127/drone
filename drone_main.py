@@ -65,8 +65,8 @@ now_dir = os.path.dirname(os.path.abspath(__file__))
 '''수정 요함'''
 # 붉은 부분만 검출하기 위한 초기값들
 hsv = 0
-color_range = 7 # 빨간색으로 인식할 범위
-threshold_S = 100 # 채도 하한값
+color_range = 9 # 빨간색으로 인식할 범위
+threshold_S = 80 # 채도 하한값
 threshold_V = 30 # 명도 하한값
 
 
@@ -303,3 +303,4 @@ if __name__ == '__main__':
     # While it can be run on any feasible IP, IP = 0.0.0.0 renders the web app on
     # the host machine's localhost and is discoverable by other machines on the same network 
     app.run(host="0.0.0.0", port="8080")
+
