@@ -20,16 +20,24 @@
             frm.submit();
             return ture;
         }
+        function submit3(frm){
+            frm.action='/';
+            frm.submit();
+            return ture;
+        }
     </script>
     <body>
         <div style="background-color:lightgrey; text-align:center">
             <h2>FORTRESS DRONE CAMERA</h2>
         </div>
         <div style='text-align:center'>
-            <img src='/video'>
+            <img src='/video' style="width:60%">
         </div>
         <div style='text-align:center'>
         <form action="/" method="POST">
+            <div>
+                숫자인식<input type="submit" name="object" value={{object_detect}}>
+            </div>
             <input type="submit" name="detect" value="detect">
             <p style="font-size: 24px">이미지 인식 결과</p>
             <p style="font-size: 70px" id='d_result'></p>
