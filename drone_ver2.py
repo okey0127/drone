@@ -10,6 +10,9 @@ import math
 # 카메라를 이용하여 실시간으로 이미지 파일 받아오기
 cap = cv2.VideoCapture(0)
 
+global num_ex
+num_ex = "N"
+
 n = 0
 gray_resize = np.zeros((50, 70))
 
@@ -71,6 +74,7 @@ def check(test, train, train_labels):
     knn.train(train, cv2.ml.ROW_SAMPLE, train_labels)
     # 가장 가까운 5개의 글자를 찾아, 어떤 숫자에 해당하는지 찾는다.
     ret, result, neighbours, dist = knn.findNearest(test, k=5)
+    print(neighbours)
     return result
 
 
@@ -103,19 +107,20 @@ while True:
     img_blurred = cv2.GaussianBlur(img_gray, ksize=(15, 15), sigmaX=0)
     cv2.imshow('blurr', img_blurred)
     
-    '''
-    # 마스킹 영역(반전됨)의 구멍 제거(opening)
-    kernel = np.ones((3, 3), np.uint8)
-    img_blurred = cv2.morphologyEx(img_blurred, cv2.MORPH_OPEN, kernel, 2)
+    if num_ex == 'Y':
+    
+        # 마스킹 영역(반전됨)의 구멍 제거(opening)
+        kernel = np.ones((3, 3), np.uint8)
+        img_blurred = cv2.morphologyEx(img_blurred, cv2.MORPH_OPEN, kernel, 2)
 
-    # 마스킹 영역(반전됨)의 팽창(erosion)
-    kernal = np.ones((5, 3), np.uint8)
-    img_blurred = cv2.erode(img_blurred, kernal, iterations=2)
+        # 마스킹 영역(반전됨)의 팽창(erosion)
+        kernal = np.ones((5, 3), np.uint8)
+        img_blurred = cv2.erode(img_blurred, kernal, iterations=2)
 
-    # 팽창된 마스킹 영역 축소(dilation)
-    kernal = np.ones((5, 3), np.uint8)
-    img_blurred = cv2.dilate(img_blurred, kernal, iterations=2)
-    '''
+        # 팽창된 마스킹 영역 축소(dilation)
+        kernal = np.ones((5, 3), np.uint8)
+        img_blurred = cv2.dilate(img_blurred, kernal, iterations=2)
+        
     
     # Thresholding
     ret, thresh = cv2.threshold(img_blurred, 220, 255, cv2.THRESH_BINARY_INV)
@@ -171,16 +176,16 @@ while True:
                 num_img = cv2.copyMakeBorder(num_img, top=clearance_y, bottom=clearance_y, left=clearance_x,
                                              right=clearance_x, borderType=cv2.BORDER_CONSTANT, value=(0, 0, 0))
                 
-                plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
-                plt.show()
+                #plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
+                #plt.show()
                 
                 # Adaptive Thresholding // 한번 더 이 작업을 수행하여 숫자의 형태를 분명하게 해준다. 
                 num_img_blurred = cv2.GaussianBlur(num_img, ksize=(5, 5), sigmaX=0)  # 노이즈 블러
                 ret, num_thresh = cv2.threshold(num_img_blurred, 127, 255, cv2.THRESH_BINARY)
                 # num_thresh = cv2.adaptiveThreshold(num_img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9)
                 
-                plt.imshow(cv2.cvtColor(num_img_blurred, cv2.COLOR_BGR2RGB))
-                plt.show()
+                #plt.imshow(cv2.cvtColor(num_img_blurred, cv2.COLOR_BGR2RGB))
+                #plt.show()
                 
                 cv2.imwrite(now_dir + '/number.jpg', num_thresh)
                 #plt.imshow(cv2.cvtColor(num_img, cv2.COLOR_BGR2RGB))
@@ -199,6 +204,12 @@ while True:
             print(result)
         except:
             print('no number')
+    elif key_input == ord('z'):
+        num_ex = 'Y'
+        print('Number Expansion ON')
+    elif key_input == ord('x'):
+        num_ex = 'N'
+        print('Number Expansion OFF')
 
 cap.release()
 cv2.destroyAllWindows()
