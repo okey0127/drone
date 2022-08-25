@@ -25,6 +25,16 @@
             frm.submit();
             return ture;
         }
+        function submit4(frm){
+            frm.action='/';
+            frm.submit();
+            return ture;
+        }
+        function submit5(frm){
+            frm.action='/';
+            frm.submit();
+            return ture;
+        }
     </script>
     <body>
         <div style="background-color:lightgrey; text-align:center">
@@ -49,6 +59,21 @@
                 <input type="button" value="next" onclick='return submit2(this.form);'>
                 {{ex}}
             </div>
+            <details>
+                <summary>상세 변수 변경</summary>
+                <p>S값(현재: {{param['threshold_S']}},60~100)</p>
+                <div>
+					<input type="text" name="threshold_S"> <input type="button" value="Enter" onclick='return submit3(this.form);'>
+				</div>
+                <p>V값(현재: {{param['threshold_V']}},10~30)</p>
+                <div>
+					<input type="text" name="threshold_V"> <input type="button" value="Enter" onclick='return submit4(this.form);'>
+				</div>
+                <p>Thresh값(현재: {{param['threshold']}},200~254)</p>
+                <div>
+					<input type="text" name="threshold"> <input type="button" value="Enter" onclick='return submit5(this.form);'>
+				</div>
+            </details>
         </form>
         </div>
     </body>
