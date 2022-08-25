@@ -27,6 +27,13 @@ number_detect = 'N'
 global num_ex
 num_ex = 'N'
 
+global threshold_S
+
+global threshold_V
+
+global threshold
+threshold = 235
+
 # Image frame sent to the Flask object
 global video_frame
 video_frame = None
@@ -160,7 +167,7 @@ def captureFrames():
                 img_blurred = cv2.dilate(img_blurred, kernal, iterations=2)
 
             # Thresholding
-            ret, thresh = cv2.threshold(img_blurred, 200, 255, cv2.THRESH_BINARY_INV)
+            ret, thresh = cv2.threshold(img_blurred, threshold, 255, cv2.THRESH_BINARY_INV)
             #thresh = cv2.adaptiveThreshold(img_blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9) 
 
             contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -190,7 +197,8 @@ def captureFrames():
             for contour in possible_contours:
                 x, y, w, h = cv2.boundingRect(contour['contour'])
                 # 송출 영상
-                frame= cv2.rectangle(frame, (x, y), (x+w, y+h), (0,0,255), 3)
+                frame= cv2.rectangle(frame, (x, y), (x+w, y+h), (0,0,0), 5)
+                frame= cv2.rectangle(frame, (x, y), (x+w, y+h), (255,255,255), 3)
             with thread_lock:
                 video = frame.copy()
                 cv2.line(video, (310,240),(330,240), (0,0,0), 5)
@@ -272,10 +280,39 @@ def streamFrames():
 @app.route('/', methods=['GET', 'POST'])
 def main():
     global number_detect, num_ex, object_detect
+    global lower_red1, upper_red1, lower_red2, upper_red2, lower_red3, upper_red3, hsv, color_range
+    global threshold_S, threshold_V, threshold
+    param = {'threshold_S':threshold_S, 'threshold_V':threshold_V, 'threshold':threshold}
     if request.method == 'POST':
         a = request.form.get('detect')
         b = request.form.get('expansion')
         c = request.form.get('object')
+        d = request.form.get('threshold_S')
+        e = request.form.get('threshold_V')
+        f = request.form.get('threshold')
+        
+        m_flag = 'N'
+        try:
+            d = int(float(d))
+            if 60 <=d<= 100:
+                threshold_S = d
+                m_flag = 'Y'
+        except:
+            pass
+        try:
+            e = int(float(e))
+            if 10<=e<=30:
+                threshold_V = e
+                m_flag = 'Y'
+        except:
+            pass
+        try:
+            f = int(float(f))
+            if 127<=f<=250:
+                threshold = f
+                m_flag = 'Y'
+        except:
+            pass
         
         if a == 'detect':
             number_detect = 'Y'
@@ -287,12 +324,22 @@ def main():
             object_detect = 'ON'
         if c=='ON':
             object_detect = 'OFF'
+
+        if m_flag == 'Y':
+            lower_red1 = np.array([hsv - color_range + 180, threshold_S, threshold_V])
+            upper_red1 = np.array([180, 255, 255])
+            lower_red2 = np.array([0, threshold_S, threshold_V])
+            upper_red2 = np.array([hsv, 255, 255])
+            lower_red3 = np.array([hsv, threshold_S, threshold_V])
+            upper_red3 = np.array([hsv + color_range, 255, 255])
+            
         return redirect('/')
     if num_ex == 'N':
         ex = '보정X'
     elif num_ex == 'Y':
         ex = '보정O'
-    return render_template('index.html', result = detect_result, ex=ex, object_detect=object_detect)
+    
+    return render_template('index.html', result = detect_result, ex=ex, object_detect=object_detect, param = param)
 
 @app.route('/result', methods=["GET", "POST"])
 def d_result():
