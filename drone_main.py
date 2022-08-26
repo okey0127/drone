@@ -202,9 +202,11 @@ def captureFrames():
             with thread_lock:
                 video = frame.copy()
                 cv2.line(video, (310,240),(330,240), (0,0,0), 5)
-                cv2.line(video, (320,235),(320,285), (0,0,0), 5)
+                cv2.line(video, (320,235),(320,295), (0,0,0), 5)
+                cv2.line(video, (315,285), (325, 285), (0,0,0), 5)
                 cv2.line(video, (310,240),(330,240), (255,255,255), 3)
-                cv2.line(video, (320,235),(320,285), (255,255,255), 3)
+                cv2.line(video, (320,235),(320,295), (255,255,255), 3)
+                cv2.line(video, (315,285), (325, 285), (255,255,255), 3)
                 video = cv2.cvtColor(video, cv2.COLOR_BGR2GRAY)
                 video_frame = cv2.resize(video, None, fx = 0.5, fy=0.5, interpolation = cv2.INTER_AREA)
             if object_detect == 'OFF':
@@ -213,9 +215,11 @@ def captureFrames():
             with thread_lock:
                 video = frame.copy()
                 cv2.line(video, (310,240),(330,240), (0,0,0), 5)
-                cv2.line(video, (320,235),(320,285), (0,0,0), 5)
+                cv2.line(video, (320,235),(320,295), (0,0,0), 5)
+                cv2.line(video, (315,285), (325, 285), (0,0,0), 5)
                 cv2.line(video, (310,240),(330,240), (255,255,255), 3)
-                cv2.line(video, (320,235),(320,285), (255,255,255), 3)
+                cv2.line(video, (320,235),(320,295), (255,255,255), 3)
+                cv2.line(video, (315,285), (325, 285), (255,255,255), 3)
                 video = cv2.cvtColor(video, cv2.COLOR_BGR2GRAY)
                 video_frame = cv2.resize(video, None, fx = 0.5, fy=0.5, interpolation = cv2.INTER_AREA)
                 
@@ -358,3 +362,4 @@ if __name__ == '__main__':
     # While it can be run on any feasible IP, IP = 0.0.0.0 renders the web app on
     # the host machine's localhost and is discoverable by other machines on the same network 
     app.run(host="0.0.0.0", port="8080")
+
