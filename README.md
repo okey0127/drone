@@ -2,8 +2,8 @@
 ### [2022년] 14회 부산대학교 총장배 창의비행체 경진대회 경북대 포트리스팀 임무장비 코드
 ▶임무 내용: 타종, 숫자 인식하여 해당 숫자의 착륙지에 착륙
 
-▶대회 제출 영상: https://youtu.be/fozkv8buq-I \n
-▶임무 연습 영상: https://youtu.be/gutTkKHl1X8 \n
+▶대회 제출 영상: https://youtu.be/fozkv8buq-I
+▶임무 연습 영상: https://youtu.be/gutTkKHl1X8
 ▶최종 영상: 
 
 ** 학습데이터가 저장된 train.npz 는 180mb로 용량이 커 GITHUB에 올릴수 없었음
